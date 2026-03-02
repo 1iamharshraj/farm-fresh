@@ -43,6 +43,7 @@ import CartPage from "./pages/customer/Cart";
 import Checkout from "./pages/customer/Checkout";
 import CustomerOrders from "./pages/customer/CustomerOrders";
 import OrderDetail from "./pages/customer/OrderDetail";
+import CustomerAnalytics from "./pages/customer/CustomerAnalytics";
 
 // Farmer order pages
 import FarmerOrders from "./pages/farmer/FarmerOrders";
@@ -132,6 +133,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <OrderDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customer/analytics"
+              element={
+                <ProtectedRoute roles={["customer"]}>
+                  <CustomerAnalytics />
                 </ProtectedRoute>
               }
             />

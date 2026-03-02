@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Navbar from "../../components/common/Navbar";
 import API from "../../api/axios";
+import { useSocket } from "../../hooks/useSocket";
 import toast from "react-hot-toast";
 import {
   FaBox,
@@ -17,7 +18,15 @@ const AvailableOrders = () => {
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(null);
 
-  const fetchOrders = async () => {
+  let socket = null;
+  try {
+    const socketCtx = useSocket();
+    socket = socketCtx.socket;
+  } catch {
+    // SocketProvider not available
+  }
+
+  const fetchOrders = useCallback(async () => {
     try {
       const { data } = await API.get("/delivery/available-orders");
       setOrders(data.data);
@@ -26,11 +35,22 @@ const AvailableOrders = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
+
+  // Auto-refresh when new delivery assignment is available
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewAssignment = () => {
+      fetchOrders();
+      toast("New order available for pickup!", { icon: "📦" });
+    };
+    socket.on("delivery:newAssignment", handleNewAssignment);
+    return () => socket.off("delivery:newAssignment", handleNewAssignment);
+  }, [socket, fetchOrders]);
 
   const handleAccept = async (orderId) => {
     setAccepting(orderId);

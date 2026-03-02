@@ -23,9 +23,20 @@ initializeSocket(server);
 connectDB();
 
 // CORS must be FIRST so preflight OPTIONS requests always get CORS headers
+const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
+  .split(",")
+  .map((s) => s.trim());
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, server-to-server)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, true); // Allow all origins in production for now
+      }
+    },
     credentials: true,
   })
 );
@@ -100,9 +111,12 @@ app.use("/api/smart", require("./routes/smart.routes"));
 // Global error handler
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`🌱 Farm Fresh API running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);
-});
+// Only start the server when not in Vercel serverless
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => {
+    console.log(`Farm Fresh API running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);
+  });
+}
 
 module.exports = app;

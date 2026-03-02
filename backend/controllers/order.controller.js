@@ -1,15 +1,16 @@
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const Produce = require("../models/Produce");
+const User = require("../models/User");
 const { createNotification } = require("./notification.controller");
-const { emitOrderUpdate } = require("../config/socket");
+const { emitOrderUpdate, emitToRole, emitToUser } = require("../config/socket");
 
 // @desc    Place order from cart
 // @route   POST /api/orders
 // @access  Customer
 exports.placeOrder = async (req, res, next) => {
   try {
-    const { paymentMethod = "cod", customerNote, deliveryAddress } = req.body;
+    const { paymentMethod = "cod", paymentStatus: reqPaymentStatus, customerNote, deliveryAddress } = req.body;
 
     const cart = await Cart.findOne({ customer: req.user._id }).populate({
       path: "items.produce",
@@ -69,7 +70,7 @@ exports.placeOrder = async (req, res, next) => {
       deliveryFee,
       totalAmount,
       paymentMethod,
-      paymentStatus: paymentMethod === "cod" ? "pending" : "pending",
+      paymentStatus: reqPaymentStatus === "completed" ? "paid" : "pending",
       customerNote,
     });
 
@@ -262,6 +263,29 @@ exports.updateOrderStatus = async (req, res, next) => {
       message: `Your order ${order.orderNumber} is now ${status.replace(/_/g, " ")}`,
       data: { orderId: order._id },
     });
+
+    // When order is ready for pickup, notify available delivery agents
+    if (status === "ready_for_pickup") {
+      const availableAgents = await User.find({
+        role: "delivery_agent",
+        "deliveryDetails.isAvailable": true,
+      }).select("_id");
+
+      for (const agent of availableAgents) {
+        createNotification({
+          recipient: agent._id,
+          type: "order_ready_for_pickup",
+          title: "New Order Available",
+          message: `Order ${order.orderNumber} is ready for pickup (Rs.${order.totalAmount})`,
+          data: { orderId: order._id },
+        });
+        emitToUser(agent._id.toString(), "delivery:newAssignment", {
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          totalAmount: order.totalAmount,
+        });
+      }
+    }
 
     // Emit real-time order update
     emitOrderUpdate(order._id.toString(), "order:statusUpdate", {

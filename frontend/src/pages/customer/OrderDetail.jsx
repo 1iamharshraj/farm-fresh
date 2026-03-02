@@ -182,6 +182,35 @@ const OrderDetail = () => {
           </div>
         )}
 
+        {/* Delivery Tracking Map */}
+        {trackingCoords && ["picked_up", "in_transit", "delivered"].includes(order.status) && (
+          <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 mb-6">
+            <h2 className="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+              <FaTruck className="text-green-500 text-sm" />
+              {order.status === "delivered" ? "Delivery Route" : "Live Tracking"}
+            </h2>
+            <MapView
+              pickupCoords={trackingCoords.pickup}
+              dropoffCoords={trackingCoords.dropoff}
+              agentCoords={trackingCoords.agent}
+              height="300px"
+            />
+            <div className="flex items-center gap-6 mt-3 text-xs text-gray-500">
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 bg-green-500 rounded-full inline-block"></span> Farm
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 bg-blue-500 rounded-full inline-block"></span> Your Location
+              </span>
+              {trackingCoords.agent && (
+                <span className="flex items-center gap-1.5">
+                  <span className="w-3 h-3 bg-amber-500 rounded-full inline-block"></span> Delivery Agent
+                </span>
+              )}
+            </div>
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Items */}
           <div className="lg:col-span-2">

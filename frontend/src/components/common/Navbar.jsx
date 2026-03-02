@@ -26,6 +26,7 @@ const roleNavItems = {
     { path: "/browse", label: "Shop", icon: <FaStore /> },
     { path: "/cart", label: "Cart", icon: <FaShoppingCart /> },
     { path: "/orders", label: "Orders", icon: <FaBox /> },
+    { path: "/customer/analytics", label: "Analytics", icon: <FaChartBar /> },
   ],
   farmer: [
     { path: "/farmer/dashboard", label: "Dashboard", icon: <FaHome /> },
