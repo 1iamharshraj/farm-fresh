@@ -1,6 +1,14 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
+const geoPointSchema = new mongoose.Schema(
+  {
+    type: { type: String, enum: ["Point"] },
+    coordinates: { type: [Number] },
+  },
+  { _id: false }
+);
+
 const addressSchema = new mongoose.Schema(
   {
     street: { type: String, trim: true },
@@ -8,8 +16,8 @@ const addressSchema = new mongoose.Schema(
     state: { type: String, trim: true },
     pincode: { type: String, trim: true },
     coordinates: {
-      type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number] }, // [longitude, latitude]
+      type: geoPointSchema,
+      default: undefined,
     },
   },
   { _id: false }
@@ -38,8 +46,8 @@ const deliveryDetailsSchema = new mongoose.Schema(
     licenseNumber: { type: String, trim: true },
     isAvailable: { type: Boolean, default: false },
     currentLocation: {
-      type: { type: String, enum: ["Point"], default: "Point" },
-      coordinates: { type: [Number] },
+      type: geoPointSchema,
+      default: undefined,
     },
     serviceRadius: { type: Number, default: 10 }, // km
   },
@@ -105,17 +113,25 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Geospatial indexes
-userSchema.index({ "address.coordinates": "2dsphere" });
-userSchema.index({ "deliveryDetails.currentLocation": "2dsphere" });
-userSchema.index({ "farmDetails.farmAddress.coordinates": "2dsphere" });
+// Geospatial indexes (sparse to handle docs without coordinates)
+userSchema.index(
+  { "address.coordinates": "2dsphere" },
+  { sparse: true }
+);
+userSchema.index(
+  { "deliveryDetails.currentLocation": "2dsphere" },
+  { sparse: true }
+);
+userSchema.index(
+  { "farmDetails.farmAddress.coordinates": "2dsphere" },
+  { sparse: true }
+);
 
 // Hash password before save
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   const salt = await bcrypt.genSalt(12);
   this.password = await bcrypt.hash(this.password, salt);
-  next();
 });
 
 // Compare passwords
