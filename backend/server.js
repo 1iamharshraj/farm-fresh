@@ -22,9 +22,6 @@ if (!process.env.VERCEL) {
   initializeSocket(server);
 }
 
-// Connect to MongoDB
-connectDB();
-
 // CORS must be FIRST so preflight OPTIONS requests always get CORS headers
 const allowedOrigins = (process.env.CLIENT_URL || "http://localhost:5173")
   .split(",")
@@ -43,6 +40,16 @@ app.use(
     credentials: true,
   })
 );
+
+// Await MongoDB connection on every request (serverless-safe — connection is cached)
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(503).json({ success: false, message: "Database connection failed" });
+  }
+});
 
 // Security middleware
 app.use(helmet());
