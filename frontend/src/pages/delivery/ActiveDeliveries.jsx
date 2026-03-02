@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../components/common/Navbar";
+import MapView from "../../components/common/MapView";
 import API from "../../api/axios";
 import toast from "react-hot-toast";
 import {
@@ -12,6 +13,8 @@ import {
   FaBox,
   FaArrowRight,
   FaCheckCircle,
+  FaMap,
+  FaExternalLinkAlt,
 } from "react-icons/fa";
 
 const statusColors = {
@@ -26,6 +29,8 @@ const ActiveDeliveries = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("active");
   const [updating, setUpdating] = useState(null);
+  const [showMap, setShowMap] = useState({}); // { deliveryId: true/false }
+  const [mapCoords, setMapCoords] = useState({}); // { deliveryId: { pickup, dropoff, agent } }
 
   const fetchDeliveries = async () => {
     setLoading(true);
@@ -58,6 +63,21 @@ const ActiveDeliveries = () => {
       toast.error(error.response?.data?.message || "Failed to update");
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const toggleMap = async (deliveryId) => {
+    const isShowing = showMap[deliveryId];
+    setShowMap((prev) => ({ ...prev, [deliveryId]: !isShowing }));
+
+    // Fetch coordinates if not already loaded
+    if (!isShowing && !mapCoords[deliveryId]) {
+      try {
+        const { data } = await API.get(`/delivery/${deliveryId}/coordinates`);
+        setMapCoords((prev) => ({ ...prev, [deliveryId]: data.data }));
+      } catch {
+        // Use fallback coords from delivery record
+      }
     }
   };
 
@@ -183,6 +203,42 @@ const ActiveDeliveries = () => {
                       </div>
                     </div>
                   </div>
+
+                  {/* Map Toggle + Map */}
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => toggleMap(delivery._id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        showMap[delivery._id]
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      <FaMap className="text-[10px]" />
+                      {showMap[delivery._id] ? "Hide Map" : "Show Map"}
+                    </button>
+                    {mapCoords[delivery._id]?.pickup && (
+                      <a
+                        href={`https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=${mapCoords[delivery._id].pickup[0]},${mapCoords[delivery._id].pickup[1]};${mapCoords[delivery._id].dropoff?.[0] || ""},${mapCoords[delivery._id].dropoff?.[1] || ""}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                      >
+                        <FaExternalLinkAlt className="text-[10px]" />
+                        Navigate
+                      </a>
+                    )}
+                  </div>
+                  {showMap[delivery._id] && mapCoords[delivery._id] && (
+                    <div className="mb-3">
+                      <MapView
+                        pickupCoords={mapCoords[delivery._id].pickup}
+                        dropoffCoords={mapCoords[delivery._id].dropoff}
+                        agentCoords={mapCoords[delivery._id].agent}
+                        height="280px"
+                      />
+                    </div>
+                  )}
 
                   {/* Stats */}
                   <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">

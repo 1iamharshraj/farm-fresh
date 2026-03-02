@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "../../components/common/Navbar";
+import MapView from "../../components/common/MapView";
 import API from "../../api/axios";
 import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
@@ -34,6 +35,7 @@ const OrderDetail = () => {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [reviewed, setReviewed] = useState(false);
+  const [trackingCoords, setTrackingCoords] = useState(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -48,6 +50,21 @@ const OrderDetail = () => {
     };
     fetchOrder();
   }, [id]);
+
+  // Fetch tracking coordinates for delivery map
+  useEffect(() => {
+    if (!order || !["picked_up", "in_transit", "delivered"].includes(order.status)) return;
+    const fetchTracking = async () => {
+      try {
+        // Uses order ID — backend finds delivery by order ID
+        const { data } = await API.get(`/delivery/${id}/coordinates`);
+        if (data.data) setTrackingCoords(data.data);
+      } catch {
+        // Ignore - map just won't show
+      }
+    };
+    fetchTracking();
+  }, [order?.status, id]);
 
   const handleCancel = async () => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;

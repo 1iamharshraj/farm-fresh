@@ -32,8 +32,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("cod");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentProcessing, setPaymentProcessing] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentStep, setPaymentStep] = useState(0); // 0=form, 1=connecting, 2=processing, 3=success
   const [customerNote, setCustomerNote] = useState("");
   const [address, setAddress] = useState({
     street: user?.address?.street || "",
@@ -61,11 +60,12 @@ const Checkout = () => {
     await submitOrder();
   };
 
-  const submitOrder = async () => {
+  const submitOrder = async (paidOnline = false) => {
     setLoading(true);
     try {
       const { data } = await API.post("/orders", {
         paymentMethod,
+        paymentStatus: paidOnline ? "completed" : "pending",
         customerNote,
         deliveryAddress: address,
       });
@@ -79,20 +79,20 @@ const Checkout = () => {
     }
   };
 
-  // Dummy payment gateway handler
-  const handleDummyPayment = async () => {
-    setPaymentProcessing(true);
-    // Simulate payment processing
+  // Dummy payment gateway handler with 3-step progress
+  const handleDummyPayment = () => {
+    setPaymentStep(1); // Connecting...
     setTimeout(() => {
-      setPaymentProcessing(false);
-      setPaymentSuccess(true);
-      // After showing success, submit the order
-      setTimeout(async () => {
-        setShowPaymentModal(false);
-        setPaymentSuccess(false);
-        await submitOrder();
+      setPaymentStep(2); // Processing...
+      setTimeout(() => {
+        setPaymentStep(3); // Success!
+        setTimeout(async () => {
+          setShowPaymentModal(false);
+          setPaymentStep(0);
+          await submitOrder(true); // paidOnline = true
+        }, 1500);
       }, 1500);
-    }, 2500);
+    }, 1200);
   };
 
   return (
@@ -236,19 +236,40 @@ const Checkout = () => {
             </div>
 
             <div className="p-6">
-              {paymentSuccess ? (
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <FaCheckCircle className="text-green-500 text-3xl" />
+              {paymentStep > 0 ? (
+                <div className="py-6">
+                  {/* Step Progress */}
+                  <div className="flex items-center justify-center gap-2 mb-8">
+                    {["Connecting", "Processing", "Success"].map((label, i) => (
+                      <div key={label} className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                          paymentStep > i + 1 ? "bg-green-500 text-white" : paymentStep === i + 1 ? "bg-[#072654] text-white" : "bg-gray-200 text-gray-400"
+                        }`}>
+                          {paymentStep > i + 1 ? "✓" : i + 1}
+                        </div>
+                        <span className={`text-[10px] font-medium ${paymentStep >= i + 1 ? "text-gray-800" : "text-gray-400"}`}>{label}</span>
+                        {i < 2 && <div className={`w-6 h-0.5 ${paymentStep > i + 1 ? "bg-green-500" : "bg-gray-200"}`} />}
+                      </div>
+                    ))}
                   </div>
-                  <h3 className="font-['Poppins'] font-semibold text-gray-800 text-lg">Payment Successful!</h3>
-                  <p className="text-sm text-gray-500 mt-1">Redirecting to order...</p>
-                </div>
-              ) : paymentProcessing ? (
-                <div className="text-center py-8">
-                  <div className="w-12 h-12 border-4 border-blue-200 border-t-[#072654] rounded-full animate-spin mx-auto mb-4"></div>
-                  <h3 className="font-medium text-gray-800">Processing Payment...</h3>
-                  <p className="text-sm text-gray-500 mt-1">Please wait, do not close this window</p>
+
+                  {paymentStep === 3 ? (
+                    <div className="text-center">
+                      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <FaCheckCircle className="text-green-500 text-3xl" />
+                      </div>
+                      <h3 className="font-['Poppins'] font-semibold text-gray-800 text-lg">Payment Successful!</h3>
+                      <p className="text-sm text-gray-500 mt-1">Redirecting to order...</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <div className="w-12 h-12 border-4 border-blue-200 border-t-[#072654] rounded-full animate-spin mx-auto mb-4"></div>
+                      <h3 className="font-medium text-gray-800">
+                        {paymentStep === 1 ? "Connecting to payment gateway..." : "Processing your payment..."}
+                      </h3>
+                      <p className="text-sm text-gray-500 mt-1">Please wait, do not close this window</p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
