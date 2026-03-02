@@ -59,7 +59,7 @@ const produceSchema = new mongoose.Schema(
 
     // Geolocation
     location: {
-      type: { type: String, enum: ["Point"], default: "Point" },
+      type: { type: String, enum: ["Point"] },
       coordinates: { type: [Number] }, // [lng, lat]
     },
 
@@ -78,7 +78,7 @@ const produceSchema = new mongoose.Schema(
 );
 
 // Indexes
-produceSchema.index({ location: "2dsphere" });
+produceSchema.index({ location: "2dsphere" }, { sparse: true });
 produceSchema.index({ name: "text", description: "text", tags: "text" });
 produceSchema.index({ category: 1, isAvailable: 1, createdAt: -1 });
 produceSchema.index({ farmer: 1, isAvailable: 1 });

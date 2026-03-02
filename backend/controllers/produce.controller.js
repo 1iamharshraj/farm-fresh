@@ -143,7 +143,7 @@ exports.updateProduce = async (req, res, next) => {
     }
 
     produce = await Produce.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+      returnDocument: "after",
       runValidators: true,
     })
       .populate("category", "name slug")
@@ -288,7 +288,7 @@ exports.seedCategories = async (req, res, next) => {
       { name: "Honey & Preserves", icon: "honey", description: "Natural honey and jams" },
     ];
 
-    const categories = await Category.insertMany(defaultCategories);
+    const categories = await Category.create(defaultCategories);
     res.status(201).json({
       success: true,
       message: `${categories.length} categories seeded`,
