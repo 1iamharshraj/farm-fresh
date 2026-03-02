@@ -15,6 +15,8 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 
 // Role dashboards
 import FarmerDashboard from "./pages/farmer/FarmerDashboard";
+import AddProduce from "./pages/farmer/AddProduce";
+import ManageProduce from "./pages/farmer/ManageProduce";
 import DeliveryDashboard from "./pages/delivery/DeliveryDashboard";
 
 function App() {
@@ -56,6 +58,22 @@ function App() {
             element={
               <ProtectedRoute roles={["farmer"]}>
                 <FarmerDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/farmer/produce"
+            element={
+              <ProtectedRoute roles={["farmer"]}>
+                <ManageProduce />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/farmer/produce/add"
+            element={
+              <ProtectedRoute roles={["farmer"]}>
+                <AddProduce />
               </ProtectedRoute>
             }
           />
