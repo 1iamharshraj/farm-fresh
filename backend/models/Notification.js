@@ -14,6 +14,7 @@ const notificationSchema = new mongoose.Schema(
         "order_confirmed",
         "order_preparing",
         "order_ready",
+        "order_ready_for_pickup",
         "order_picked_up",
         "order_in_transit",
         "order_delivered",
