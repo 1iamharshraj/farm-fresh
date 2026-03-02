@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm init -y)",
+      "Bash(npm install express mongoose dotenv cors helmet morgan cookie-parser express-validator bcryptjs jsonwebtoken)",
+      "Bash(npm create vite@latest frontend -- --template react)",
+      "Bash(npm install -D nodemon)",
+      "Bash(npm install)",
+      "Bash(npm install react-router-dom axios react-icons react-hot-toast @tailwindcss/vite tailwindcss)",
+      "Bash(npm run build)",
+      "Bash(npm install express-rate-limit express-mongo-sanitize compression)",
+      "Bash(npm test)",
+      "Bash(node -e \":*)",
+      "Bash(npx cross-env NODE_ENV=test JWT_SECRET=test-jwt-secret-key-12345 JWT_EXPIRE=7d npx jest --runInBand --forceExit --detectOpenHandles --verbose)",
+      "Bash(npx cross-env NODE_ENV=test JWT_SECRET=test-jwt-secret-key-12345 JWT_EXPIRE=7d npx jest --runInBand --forceExit --detectOpenHandles)",
+      "Bash(node tests/quickTest.js)",
+      "Bash(curl -s -X POST http://localhost:5000/api/auth/login -H \"Content-Type: application/json\" -H \"Origin: http://localhost:5173\" -d '{\"\"email\"\":\"\"test@test.com\"\",\"\"password\"\":\"\"test\"\"}')",
+      "Bash(grep -r \"cart\\\\|orders\" /d/project/farmer-marketPlace/frontend/src/pages/*.jsx)",
+      "Bash(npm install react-leaflet leaflet)"
+    ]
+  }
+}
