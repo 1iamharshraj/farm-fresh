@@ -5,7 +5,14 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "cross-env NODE_ENV=test JWT_SECRET=test-jwt-secret-key-12345 JWT_EXPIRE=7d jest --runInBand --forceExit --detectOpenHandles",
+    "test:verbose": "cross-env NODE_ENV=test JWT_SECRET=test-jwt-secret-key-12345 JWT_EXPIRE=7d jest --runInBand --forceExit --detectOpenHandles --verbose"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "testTimeout": 30000
   },
   "keywords": [],
   "author": "",
@@ -28,6 +35,10 @@
     "socket.io": "^4.8.3"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "cross-env": "^10.1.0",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^11.0.1",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2"
   }
 }
