@@ -51,7 +51,8 @@ app.use("/api/orders", require("./routes/order.routes"));
 // app.use("/api/payments", require("./routes/payment.routes"));
 app.use("/api/delivery", require("./routes/delivery.routes"));
 app.use("/api/notifications", require("./routes/notification.routes"));
-// app.use("/api/reviews", require("./routes/review.routes"));
+app.use("/api/reviews", require("./routes/review.routes"));
+app.use("/api/analytics", require("./routes/analytics.routes"));
 
 // Global error handler
 app.use(errorHandler);

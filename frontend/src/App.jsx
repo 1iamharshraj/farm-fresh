@@ -31,6 +31,7 @@ import OrderDetail from "./pages/customer/OrderDetail";
 
 // Farmer order pages
 import FarmerOrders from "./pages/farmer/FarmerOrders";
+import SalesAnalytics from "./pages/farmer/SalesAnalytics";
 
 // Delivery pages
 import DeliveryDashboard from "./pages/delivery/DeliveryDashboard";
@@ -149,6 +150,14 @@ function App() {
               element={
                 <ProtectedRoute roles={["farmer"]}>
                   <FarmerOrders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/farmer/analytics"
+              element={
+                <ProtectedRoute roles={["farmer"]}>
+                  <SalesAnalytics />
                 </ProtectedRoute>
               }
             />

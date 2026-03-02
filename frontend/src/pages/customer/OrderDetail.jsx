@@ -14,7 +14,9 @@ import {
   FaTruck,
   FaTimes,
   FaPhone,
+  FaStar,
 } from "react-icons/fa";
+import ReviewForm from "../../components/common/ReviewForm";
 
 const statusSteps = [
   { key: "placed", label: "Placed", icon: <FaClock /> },
@@ -31,6 +33,7 @@ const OrderDetail = () => {
   const { user } = useAuth();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [reviewed, setReviewed] = useState(false);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -229,6 +232,24 @@ const OrderDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Review Section - show only for delivered orders by customers */}
+        {order.status === "delivered" && user?.role === "customer" && !reviewed && (
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 mt-6">
+            <h2 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <FaStar className="text-yellow-400" /> Rate Your Experience
+            </h2>
+            <ReviewForm
+              orderId={order._id}
+              onReviewSubmitted={() => setReviewed(true)}
+            />
+          </div>
+        )}
+        {reviewed && (
+          <div className="bg-green-50 rounded-xl p-4 mt-6 text-center text-green-700 font-medium text-sm">
+            <FaCheckCircle className="inline mr-1" /> Thank you for your review!
+          </div>
+        )}
       </div>
     </div>
   );
