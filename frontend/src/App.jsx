@@ -32,6 +32,9 @@ import FarmerOrders from "./pages/farmer/FarmerOrders";
 
 // Delivery pages
 import DeliveryDashboard from "./pages/delivery/DeliveryDashboard";
+import AvailableOrders from "./pages/delivery/AvailableOrders";
+import ActiveDeliveries from "./pages/delivery/ActiveDeliveries";
+import DeliveryEarnings from "./pages/delivery/Earnings";
 
 function App() {
   return (
@@ -143,6 +146,30 @@ function App() {
               element={
                 <ProtectedRoute roles={["delivery_agent"]}>
                   <DeliveryDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/delivery/available"
+              element={
+                <ProtectedRoute roles={["delivery_agent"]}>
+                  <AvailableOrders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/delivery/active"
+              element={
+                <ProtectedRoute roles={["delivery_agent"]}>
+                  <ActiveDeliveries />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/delivery/earnings"
+              element={
+                <ProtectedRoute roles={["delivery_agent"]}>
+                  <DeliveryEarnings />
                 </ProtectedRoute>
               }
             />

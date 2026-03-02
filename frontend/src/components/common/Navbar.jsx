@@ -31,6 +31,7 @@ const roleNavItems = {
   ],
   delivery_agent: [
     { path: "/delivery/dashboard", label: "Dashboard", icon: <FaHome /> },
+    { path: "/delivery/available", label: "Available", icon: <FaBox /> },
     { path: "/delivery/active", label: "Deliveries", icon: <FaTruck /> },
     { path: "/delivery/earnings", label: "Earnings", icon: <FaChartBar /> },
   ],
