@@ -130,7 +130,7 @@ const Register = () => {
       toast.success(`Welcome to Farm Fresh, ${user.name}!`);
 
       const roleRoutes = {
-        customer: "/",
+        customer: "/browse",
         farmer: "/farmer/dashboard",
         delivery_agent: "/delivery/dashboard",
       };

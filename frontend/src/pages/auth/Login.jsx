@@ -23,7 +23,7 @@ const Login = () => {
       toast.success(`Welcome back, ${user.name}!`);
       // Redirect based on role
       const roleRoutes = {
-        customer: "/",
+        customer: "/browse",
         farmer: "/farmer/dashboard",
         delivery_agent: "/delivery/dashboard",
       };
