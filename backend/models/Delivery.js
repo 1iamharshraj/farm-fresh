@@ -20,14 +20,14 @@ const deliverySchema = new mongoose.Schema(
     pickupLocation: {
       address: { type: String },
       coordinates: {
-        type: { type: String, enum: ["Point"], default: "Point" },
+        type: { type: String, enum: ["Point"] },
         coordinates: { type: [Number] },
       },
     },
     dropoffLocation: {
       address: { type: String },
       coordinates: {
-        type: { type: String, enum: ["Point"], default: "Point" },
+        type: { type: String, enum: ["Point"] },
         coordinates: { type: [Number] },
       },
     },
@@ -46,6 +46,6 @@ const deliverySchema = new mongoose.Schema(
 
 deliverySchema.index({ deliveryAgent: 1, status: 1 });
 deliverySchema.index({ order: 1 });
-deliverySchema.index({ "pickupLocation.coordinates": "2dsphere" });
+deliverySchema.index({ "pickupLocation.coordinates": "2dsphere" }, { sparse: true });
 
 module.exports = mongoose.model("Delivery", deliverySchema);

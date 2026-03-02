@@ -11,8 +11,13 @@ const {
   updateDeliveryStatus,
   getEarnings,
   getDashboardStats,
+  getDeliveryCoordinates,
 } = require("../controllers/delivery.controller");
 
+// Coordinates endpoint accessible by any authenticated user (customers need it for tracking)
+router.get("/:id/coordinates", protect, getDeliveryCoordinates);
+
+// All other routes require delivery_agent role
 router.use(protect, authorize("delivery_agent"));
 
 router.put("/toggle-availability", toggleAvailability);

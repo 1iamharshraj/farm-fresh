@@ -97,17 +97,34 @@ exports.acceptDelivery = async (req, res, next) => {
     });
     await order.save();
 
-    // Create delivery record
+    // Create delivery record with real coordinates
     const farmer = order.items[0]?.farmer;
+
+    // Extract pickup coords from farmer's farmAddress or address (GeoJSON: [lng, lat])
+    const farmerCoords = farmer?.farmDetails?.farmAddress?.coordinates?.coordinates
+      || farmer?.address?.coordinates?.coordinates
+      || [77.2090, 28.6139]; // Default: Delhi
+
+    // Extract dropoff coords from customer address (GeoJSON: [lng, lat])
+    const customerCoords = order.customer?.address?.coordinates?.coordinates
+      || [77.2310, 28.6280]; // Default: Delhi offset
+
+    const pickupAddr = farmer?.farmDetails?.farmAddress?.city
+      || farmer?.farmDetails?.farmName
+      || "Farmer location";
+    const dropoffAddr = `${order.deliveryAddress?.street || ""}, ${order.deliveryAddress?.city || ""}`.trim() || "Customer location";
+
     const delivery = await Delivery.create({
       order: order._id,
       deliveryAgent: req.user._id,
       status: "accepted",
       pickupLocation: {
-        address: farmer?.farmDetails?.farmAddress?.city || "Farmer location",
+        address: pickupAddr,
+        coordinates: { type: "Point", coordinates: farmerCoords },
       },
       dropoffLocation: {
-        address: `${order.deliveryAddress?.street || ""}, ${order.deliveryAddress?.city || ""}`.trim(),
+        address: dropoffAddr,
+        coordinates: { type: "Point", coordinates: customerCoords },
       },
       distance: (Math.random() * 10 + 2).toFixed(1), // Simulated distance
       estimatedTime: Math.floor(Math.random() * 30 + 15), // 15-45 min
@@ -294,6 +311,46 @@ exports.getEarnings = async (req, res, next) => {
           avgTime,
         },
         allTime: allTimeStats[0] || { totalEarnings: 0, totalDeliveries: 0, avgDistance: 0 },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get delivery coordinates for map display
+// @route   GET /api/delivery/:id/coordinates
+// @access  Delivery Agent / Customer
+exports.getDeliveryCoordinates = async (req, res, next) => {
+  try {
+    // Try finding by delivery ID first, then by order ID
+    let delivery = await Delivery.findById(req.params.id).catch(() => null);
+    if (!delivery) {
+      delivery = await Delivery.findOne({ order: req.params.id });
+    }
+
+    if (!delivery) {
+      return res.status(404).json({ success: false, message: "Delivery not found" });
+    }
+
+    // GeoJSON stores [lng, lat] but frontend Leaflet needs [lat, lng]
+    const toLatLng = (geoCoords) => {
+      if (!geoCoords?.coordinates || geoCoords.coordinates.length < 2) return null;
+      return [geoCoords.coordinates[1], geoCoords.coordinates[0]];
+    };
+
+    // Get agent's current location
+    const agent = await User.findById(delivery.deliveryAgent).select("deliveryDetails.currentLocation");
+    const agentLocation = agent?.deliveryDetails?.currentLocation;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        pickup: toLatLng(delivery.pickupLocation?.coordinates),
+        dropoff: toLatLng(delivery.dropoffLocation?.coordinates),
+        agent: toLatLng(agentLocation),
+        pickupAddress: delivery.pickupLocation?.address,
+        dropoffAddress: delivery.dropoffLocation?.address,
       },
     });
   } catch (error) {
