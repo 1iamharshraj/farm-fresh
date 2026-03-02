@@ -90,19 +90,17 @@ const orderSchema = new mongoose.Schema(
 );
 
 // Auto-generate order number
-orderSchema.pre("save", async function (next) {
+orderSchema.pre("save", async function () {
   if (this.isNew) {
     const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const count = await this.constructor.countDocuments();
     this.orderNumber = `FF-${date}-${String(count + 1).padStart(4, "0")}`;
     this.statusHistory.push({ status: "placed", note: "Order placed" });
   }
-  next();
 });
 
 orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ "items.farmer": 1, status: 1 });
 orderSchema.index({ deliveryAgent: 1, status: 1 });
-orderSchema.index({ orderNumber: 1 });
 
 module.exports = mongoose.model("Order", orderSchema);

@@ -5,7 +5,8 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const rateLimit = require("express-rate-limit");
-const mongoSanitize = require("express-mongo-sanitize");
+// express-mongo-sanitize is incompatible with Express v5 (req.query is read-only)
+// Using a custom sanitizer middleware instead
 const compression = require("compression");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
@@ -21,9 +22,16 @@ initializeSocket(server);
 // Connect to MongoDB
 connectDB();
 
+// CORS must be FIRST so preflight OPTIONS requests always get CORS headers
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    credentials: true,
+  })
+);
+
 // Security middleware
 app.use(helmet());
-app.use(mongoSanitize()); // Prevent NoSQL injection
 app.use(compression()); // GZIP compression
 
 // Rate limiting
@@ -42,16 +50,27 @@ const authLimiter = rateLimit({
 });
 app.use("/api/auth/login", authLimiter);
 app.use("/api/auth/register", authLimiter);
-
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    credentials: true,
-  })
-);
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Custom NoSQL injection sanitizer (Express v5 compatible — req.query is read-only)
+app.use((req, res, next) => {
+  const sanitize = (obj) => {
+    if (typeof obj !== "object" || obj === null) return obj;
+    for (const key in obj) {
+      if (key.startsWith("$")) {
+        delete obj[key];
+      } else if (typeof obj[key] === "object") {
+        sanitize(obj[key]);
+      }
+    }
+    return obj;
+  };
+  if (req.body) sanitize(req.body);
+  if (req.params) sanitize(req.params);
+  next();
+});
 
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
