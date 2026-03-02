@@ -16,6 +16,7 @@ import {
   FaChartBar,
   FaBox,
   FaBell,
+  FaLightbulb,
 } from "react-icons/fa";
 import { GiFarmer } from "react-icons/gi";
 
@@ -31,6 +32,7 @@ const roleNavItems = {
     { path: "/farmer/produce", label: "My Produce", icon: <FaStore /> },
     { path: "/farmer/orders", label: "Orders", icon: <FaBox /> },
     { path: "/farmer/analytics", label: "Analytics", icon: <FaChartBar /> },
+    { path: "/farmer/insights", label: "Insights", icon: <FaLightbulb /> },
   ],
   delivery_agent: [
     { path: "/delivery/dashboard", label: "Dashboard", icon: <FaHome /> },
