@@ -14,10 +14,13 @@ const { initializeSocket } = require("./config/socket");
 require("dotenv").config();
 
 const app = express();
-const server = http.createServer(app);
 
-// Initialize Socket.io
-initializeSocket(server);
+// Socket.io requires a persistent HTTP server — skip on Vercel serverless
+let server;
+if (!process.env.VERCEL) {
+  server = http.createServer(app);
+  initializeSocket(server);
+}
 
 // Connect to MongoDB
 connectDB();
@@ -112,7 +115,7 @@ app.use("/api/smart", require("./routes/smart.routes"));
 app.use(errorHandler);
 
 // Only start the server when not in Vercel serverless
-if (!process.env.VERCEL) {
+if (!process.env.VERCEL && server) {
   const PORT = process.env.PORT || 5000;
   server.listen(PORT, () => {
     console.log(`Farm Fresh API running on port ${PORT} [${process.env.NODE_ENV || "development"}]`);

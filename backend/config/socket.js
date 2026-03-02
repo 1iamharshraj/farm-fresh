@@ -76,10 +76,7 @@ const initializeSocket = (server) => {
 };
 
 const getIO = () => {
-  if (!io) {
-    throw new Error("Socket.io not initialized");
-  }
-  return io;
+  return io || null;
 };
 
 // Helper to emit events to specific users
