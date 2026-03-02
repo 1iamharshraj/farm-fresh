@@ -2,6 +2,33 @@ const crypto = require("crypto");
 const User = require("../models/User");
 const generateToken = require("../utils/generateToken");
 
+// Convert { lat, lng } to GeoJSON { type: "Point", coordinates: [lng, lat] }
+const normalizeCoordinates = (coords) => {
+  if (!coords) return undefined;
+  // Already GeoJSON format
+  if (coords.type === "Point" && Array.isArray(coords.coordinates)) return coords;
+  // Convert { lat, lng } format
+  if (coords.lat != null && coords.lng != null) {
+    return { type: "Point", coordinates: [coords.lng, coords.lat] };
+  }
+  return undefined;
+};
+
+// Normalize address coordinates from frontend format to GeoJSON
+const normalizeAddress = (address) => {
+  if (!address) return address;
+  const normalized = { ...address };
+  if (address.coordinates) {
+    const geo = normalizeCoordinates(address.coordinates);
+    if (geo) {
+      normalized.coordinates = geo;
+    } else {
+      delete normalized.coordinates;
+    }
+  }
+  return normalized;
+};
+
 // @desc    Register user
 // @route   POST /api/auth/register
 exports.register = async (req, res, next) => {
@@ -14,14 +41,20 @@ exports.register = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Email already registered" });
     }
 
-    // Build user data
-    const userData = { name, email, password, phone, role, address };
+    // Build user data — normalize coordinates to GeoJSON
+    const userData = { name, email, password, phone, role, address: normalizeAddress(address) };
 
     // Attach role-specific details
     if (role === "farmer" && farmDetails) {
+      if (farmDetails.farmAddress) {
+        farmDetails.farmAddress = normalizeAddress(farmDetails.farmAddress);
+      }
       userData.farmDetails = farmDetails;
     }
     if (role === "delivery_agent" && deliveryDetails) {
+      if (deliveryDetails.currentLocation) {
+        deliveryDetails.currentLocation = normalizeCoordinates(deliveryDetails.currentLocation);
+      }
       userData.deliveryDetails = deliveryDetails;
     }
 
@@ -139,6 +172,17 @@ exports.updateProfile = async (req, res, next) => {
       if (req.body[field] !== undefined) {
         updates[field] = req.body[field];
       }
+    }
+
+    // Normalize coordinates to GeoJSON
+    if (updates.address) {
+      updates.address = normalizeAddress(updates.address);
+    }
+    if (updates.farmDetails?.farmAddress) {
+      updates.farmDetails.farmAddress = normalizeAddress(updates.farmDetails.farmAddress);
+    }
+    if (updates.deliveryDetails?.currentLocation) {
+      updates.deliveryDetails.currentLocation = normalizeCoordinates(updates.deliveryDetails.currentLocation);
     }
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, {

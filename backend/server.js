@@ -8,7 +8,6 @@ const rateLimit = require("express-rate-limit");
 // express-mongo-sanitize is incompatible with Express v5 (req.query is read-only)
 // Using a custom sanitizer middleware instead
 const compression = require("compression");
-const mongoose = require("mongoose");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
 const { initializeSocket } = require("./config/socket");
@@ -99,23 +98,12 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Health check
-app.get("/api/health", async (req, res) => {
-  let dbStatus = "not configured";
-  if (process.env.MONGO_URI) {
-    try {
-      await connectDB();
-      dbStatus = `connected (state: ${mongoose.connection.readyState})`;
-    } catch (err) {
-      dbStatus = `error: ${err.message}`;
-    }
-  }
+app.get("/api/health", (req, res) => {
   res.json({
     success: true,
     message: "Farm Fresh API is running",
     environment: process.env.NODE_ENV || "development",
     timestamp: new Date().toISOString(),
-    dbStatus,
-    jwtConfigured: !!process.env.JWT_SECRET,
   });
 });
 
