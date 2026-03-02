@@ -97,6 +97,8 @@ app.get("/api/health", (req, res) => {
     message: "Farm Fresh API is running",
     environment: process.env.NODE_ENV || "development",
     timestamp: new Date().toISOString(),
+    dbConfigured: !!process.env.MONGO_URI,
+    jwtConfigured: !!process.env.JWT_SECRET,
   });
 });
 
