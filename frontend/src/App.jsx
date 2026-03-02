@@ -1,9 +1,24 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { SocketProvider } from "./context/SocketContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import { useAuth } from "./hooks/useAuth";
+
+// Redirect logged-in users from landing page to their role-based dashboard
+const HomeRoute = () => {
+  const { user } = useAuth();
+  if (user) {
+    const roleRoutes = {
+      customer: "/browse",
+      farmer: "/farmer/dashboard",
+      delivery_agent: "/delivery/dashboard",
+    };
+    return <Navigate to={roleRoutes[user.role] || "/browse"} replace />;
+  }
+  return <LandingPage />;
+};
 
 // Common pages
 import LandingPage from "./pages/common/LandingPage";
@@ -58,7 +73,7 @@ function App() {
             }}
           />
           <Routes>
-            <Route path="/" element={<LandingPage />} />
+            <Route path="/" element={<HomeRoute />} />
 
             {/* Auth routes */}
             <Route path="/login" element={<Login />} />

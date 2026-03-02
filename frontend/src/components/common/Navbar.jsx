@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { useSocket } from "../../hooks/useSocket";
+import { useCart } from "../../hooks/useCart";
 import API from "../../api/axios";
 import {
   FaLeaf,
@@ -22,8 +23,7 @@ import { GiFarmer } from "react-icons/gi";
 
 const roleNavItems = {
   customer: [
-    { path: "/", label: "Home", icon: <FaHome /> },
-    { path: "/browse", label: "Browse", icon: <FaStore /> },
+    { path: "/browse", label: "Shop", icon: <FaStore /> },
     { path: "/cart", label: "Cart", icon: <FaShoppingCart /> },
     { path: "/orders", label: "Orders", icon: <FaBox /> },
   ],
@@ -70,6 +70,15 @@ const Navbar = () => {
     // SocketProvider not available yet
   }
 
+  // Cart count for customer badge
+  let cartCount = 0;
+  try {
+    const cartCtx = useCart();
+    cartCount = cartCtx.cartCount;
+  } catch {
+    // CartProvider not available or not customer
+  }
+
   useEffect(() => {
     if (user) {
       API.get("/notifications/unread-count")
@@ -103,10 +112,15 @@ const Navbar = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className="flex items-center gap-1.5 text-gray-600 hover:text-green-600 transition-colors text-sm font-medium"
+                className="relative flex items-center gap-1.5 text-gray-600 hover:text-green-600 transition-colors text-sm font-medium"
               >
                 {item.icon}
                 {item.label}
+                {item.path === "/cart" && cartCount > 0 && (
+                  <span className="absolute -top-2 -right-3 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {cartCount > 9 ? "9+" : cartCount}
+                  </span>
+                )}
               </Link>
             ))}
           </div>
@@ -175,6 +189,11 @@ const Navbar = () => {
               >
                 {item.icon}
                 {item.label}
+                {item.path === "/cart" && cartCount > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
             ))}
             <Link
