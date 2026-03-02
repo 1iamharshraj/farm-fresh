@@ -23,6 +23,12 @@ import ManageProduce from "./pages/farmer/ManageProduce";
 import BrowseProduce from "./pages/customer/BrowseProduce";
 import ProduceDetail from "./pages/customer/ProduceDetail";
 import CartPage from "./pages/customer/Cart";
+import Checkout from "./pages/customer/Checkout";
+import CustomerOrders from "./pages/customer/CustomerOrders";
+import OrderDetail from "./pages/customer/OrderDetail";
+
+// Farmer order pages
+import FarmerOrders from "./pages/farmer/FarmerOrders";
 
 // Delivery pages
 import DeliveryDashboard from "./pages/delivery/DeliveryDashboard";
@@ -72,6 +78,30 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/checkout"
+              element={
+                <ProtectedRoute roles={["customer"]}>
+                  <Checkout />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute roles={["customer"]}>
+                  <CustomerOrders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders/:id"
+              element={
+                <ProtectedRoute>
+                  <OrderDetail />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Farmer routes */}
             <Route
@@ -95,6 +125,14 @@ function App() {
               element={
                 <ProtectedRoute roles={["farmer"]}>
                   <AddProduce />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/farmer/orders"
+              element={
+                <ProtectedRoute roles={["farmer"]}>
+                  <FarmerOrders />
                 </ProtectedRoute>
               }
             />
