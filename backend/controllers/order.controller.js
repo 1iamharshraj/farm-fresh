@@ -1,6 +1,8 @@
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const Produce = require("../models/Produce");
+const { createNotification } = require("./notification.controller");
+const { emitOrderUpdate } = require("../config/socket");
 
 // @desc    Place order from cart
 // @route   POST /api/orders
@@ -86,6 +88,18 @@ exports.placeOrder = async (req, res, next) => {
       { path: "customer", select: "name email phone" },
       { path: "items.farmer", select: "name farmDetails.farmName" },
     ]);
+
+    // Notify farmers about new order
+    const farmerIds = [...new Set(orderItems.map((item) => item.farmer.toString()))];
+    for (const farmerId of farmerIds) {
+      createNotification({
+        recipient: farmerId,
+        type: "order_placed",
+        title: "New Order Received",
+        message: `New order ${order.orderNumber} with Rs.${totalAmount}`,
+        data: { orderId: order._id },
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -230,6 +244,31 @@ exports.updateOrderStatus = async (req, res, next) => {
       { path: "items.farmer", select: "name farmDetails.farmName" },
       { path: "deliveryAgent", select: "name phone" },
     ]);
+
+    // Notify customer about status change
+    const statusLabels = {
+      confirmed: "Order Confirmed",
+      preparing: "Order Being Prepared",
+      ready_for_pickup: "Order Ready for Pickup",
+      picked_up: "Order Picked Up",
+      in_transit: "Order In Transit",
+      delivered: "Order Delivered",
+    };
+
+    createNotification({
+      recipient: order.customer._id || order.customer,
+      type: `order_${status}`,
+      title: statusLabels[status] || `Order ${status}`,
+      message: `Your order ${order.orderNumber} is now ${status.replace(/_/g, " ")}`,
+      data: { orderId: order._id },
+    });
+
+    // Emit real-time order update
+    emitOrderUpdate(order._id.toString(), "order:statusUpdate", {
+      orderId: order._id,
+      status,
+      orderNumber: order.orderNumber,
+    });
 
     res.status(200).json({
       success: true,

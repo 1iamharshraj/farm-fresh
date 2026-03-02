@@ -2,12 +2,14 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { SocketProvider } from "./context/SocketContext";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
 // Common pages
 import LandingPage from "./pages/common/LandingPage";
 import NotFound from "./pages/common/NotFound";
 import Profile from "./pages/common/Profile";
+import Notifications from "./pages/common/Notifications";
 
 // Auth pages
 import Login from "./pages/auth/Login";
@@ -41,6 +43,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
+          <SocketProvider>
           <Toaster
             position="top-right"
             toastOptions={{
@@ -66,6 +69,16 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Profile />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Notifications (all authenticated users) */}
+            <Route
+              path="/notifications"
+              element={
+                <ProtectedRoute>
+                  <Notifications />
                 </ProtectedRoute>
               }
             />
@@ -176,6 +189,7 @@ function App() {
 
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </SocketProvider>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>

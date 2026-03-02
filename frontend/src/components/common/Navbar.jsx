@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
+import { useSocket } from "../../hooks/useSocket";
+import API from "../../api/axios";
 import {
   FaLeaf,
   FaUser,
@@ -13,6 +15,7 @@ import {
   FaShoppingCart,
   FaChartBar,
   FaBox,
+  FaBell,
 } from "react-icons/fa";
 import { GiFarmer } from "react-icons/gi";
 
@@ -54,6 +57,25 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Try to use socket context, but gracefully handle if not available
+  let unreadCount = 0;
+  let setUnreadCount = () => {};
+  try {
+    const socketCtx = useSocket();
+    unreadCount = socketCtx.unreadCount;
+    setUnreadCount = socketCtx.setUnreadCount;
+  } catch {
+    // SocketProvider not available yet
+  }
+
+  useEffect(() => {
+    if (user) {
+      API.get("/notifications/unread-count")
+        .then(({ data }) => setUnreadCount(data.data.count))
+        .catch(() => {});
+    }
+  }, [user, setUnreadCount]);
+
   const handleLogout = async () => {
     await logout();
     navigate("/login");
@@ -91,6 +113,20 @@ const Navbar = () => {
           <div className="flex items-center gap-3">
             {user && (
               <>
+                {/* Notification Bell */}
+                <Link
+                  to="/notifications"
+                  className="relative text-gray-400 hover:text-green-600 transition-colors p-2"
+                  title="Notifications"
+                >
+                  <FaBell className="text-lg" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  )}
+                </Link>
+
                 <span className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${roleBadgeColors[user.role]}`}>
                   {roleIcons[user.role]}
                   {user.role === "delivery_agent" ? "Delivery" : user.role.charAt(0).toUpperCase() + user.role.slice(1)}
@@ -139,6 +175,19 @@ const Navbar = () => {
                 {item.label}
               </Link>
             ))}
+            <Link
+              to="/notifications"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 text-gray-600 hover:bg-green-50 hover:text-green-600 rounded-lg transition-colors text-sm"
+            >
+              <FaBell />
+              Notifications
+              {unreadCount > 0 && (
+                <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </Link>
           </div>
         </div>
       )}

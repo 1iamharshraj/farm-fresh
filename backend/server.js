@@ -1,13 +1,19 @@
 const express = require("express");
+const http = require("http");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
 const connectDB = require("./config/db");
 const errorHandler = require("./middleware/errorHandler");
+const { initializeSocket } = require("./config/socket");
 require("dotenv").config();
 
 const app = express();
+const server = http.createServer(app);
+
+// Initialize Socket.io
+initializeSocket(server);
 
 // Connect to MongoDB
 connectDB();
@@ -44,14 +50,14 @@ app.use("/api/cart", require("./routes/cart.routes"));
 app.use("/api/orders", require("./routes/order.routes"));
 // app.use("/api/payments", require("./routes/payment.routes"));
 app.use("/api/delivery", require("./routes/delivery.routes"));
+app.use("/api/notifications", require("./routes/notification.routes"));
 // app.use("/api/reviews", require("./routes/review.routes"));
-// app.use("/api/notifications", require("./routes/notification.routes"));
 
 // Global error handler
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🌱 Farm Fresh API running on port ${PORT}`);
 });
 
